@@ -1,0 +1,26 @@
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Python (for phase 1+ of the shared project: train.py, predict(), FastAPI service)
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.env.*
+
+# ML / data tooling
+mlruns/
+.dvc/cache/
+.dvc/tmp/
+*.log
+
+# Notebooks checkpoints
+.ipynb_checkpoints/
