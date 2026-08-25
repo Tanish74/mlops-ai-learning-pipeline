@@ -1,0 +1,95 @@
+# .github/workflows/weekly-reminder.yml
+#
+# Emails both of you every Saturday at 3:00 PM IST with the current week,
+# what each lane should be on, and last week's note.
+#
+# SETUP (5 min):
+#  1. Commit this file to .github/workflows/ in your project repo.
+#  2. Commit tracker/progress.json (exported from the tracker) to the repo.
+#  3. Gmail: turn on 2FA, then create an App Password
+#     (myaccount.google.com > Security > App passwords). 16 chars.
+#  4. Repo > Settings > Secrets and variables > Actions > New secret:
+#       MAIL_USERNAME   your.address@gmail.com
+#       MAIL_PASSWORD   the 16-char app password (NOT your Gmail password)
+#       MAIL_TO         imruthika2003@gmail.com,tanishve74@gmail.com
+#  5. Actions tab > Weekly learning reminder > Run workflow, to test it now.
+#
+# Whoever studies that week updates progress.json and commits. The commit
+# IS the check-in — if the file is stale, the email says so, which is the
+# part that actually creates pressure.
+
+name: Weekly learning reminder
+
+on:
+  schedule:
+    # 09:30 UTC Saturday = 15:00 (3:00 PM) IST Saturday. GitHub cron is always UTC.
+    - cron: '30 9 * * 6'
+  workflow_dispatch:        # lets you trigger it manually to test
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the message
+        id: msg
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, datetime, subprocess, os
+
+          p = json.load(open('tracker/progress.json'))
+          start = datetime.date.fromisoformat(p['start_date'])
+          build = datetime.date.fromisoformat(p['build_date'])
+          today = datetime.date.today()
+
+          week = (today - start).days // 7 + 1
+          left = (build - today).days
+
+          # how long since anyone touched the file
+          stamp = subprocess.run(
+              ['git', 'log', '-1', '--format=%cI', '--', 'tracker/progress.json'],
+              capture_output=True, text=True).stdout.strip()
+          stale = ''
+          if stamp:
+              days = (today - datetime.date.fromisoformat(stamp[:10])).days
+              if days >= 7:
+                  stale = f"\n>> Nobody has updated progress.json in {days} days.\n"
+
+          lines = [
+              f"Week {week}. "
+              + (f"{left} days until the build starts." if left >= 0
+                 else f"The build date was {abs(left)} days ago."),
+              stale,
+          ]
+
+          for person in p['people']:
+              lines += [
+                  "",
+                  f"--- {person['name'].upper()} ({person['track']})",
+                  f"    Should be on: {person['this_week']}",
+                  f"    Left off:     {person['left_off'] or '(nothing logged)'}",
+              ]
+
+          lines += ["", f"Board: {p['board_url']}",
+                    "Update tracker/progress.json and push when you finish something."]
+
+          body = "\n".join(lines)
+          print(f"subject=IMPORTANT: Week {week} — {left} days to build start")
+          print("body<<EOF")
+          print(body)
+          print("EOF")
+          PY
+
+      - name: Send it
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Learning Pipeline
+          to: ${{ secrets.MAIL_TO }}
+          subject: ${{ steps.msg.outputs.subject }}
+          body: ${{ steps.msg.outputs.body }}
