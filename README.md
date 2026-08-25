@@ -2,16 +2,23 @@
 
 Parallel learning tracker for two people prepping for one shared build. Six weeks of foundations on two separate tracks, converging into a support-ticket triage system (classical ML + RAG) that starts on a fixed, non-negotiable date: **2026-10-06**.
 
+**Live tracker:** https://tanish74.github.io/mlops-ai-learning-pipeline/
+**Repo:** https://github.com/Tanish74/mlops-ai-learning-pipeline
+
 ## What's in this repo
 
 - **`tracker/learning-pipeline-local.html`** — the tracker itself. A single self-contained HTML page with two parallel lanes (MLOps track for Tanish, AI engineering track for the friend), a merge stage that stays locked until both lanes clear stage 03, a preloaded curriculum with links, and a free-text "where I left off" field per person. It saves your checkbox state to the browser's `localStorage`, and has an **Export progress.json** button that downloads the current state in the exact schema the weekly email reads.
 - **`tracker/progress.json`** — the data file the tracker exports and the GitHub Action reads. Holds `start_date`, `build_date`, `board_url`, and a `people` array (`name`, `track`, `this_week`, `left_off`). This is the file you overwrite and commit each week — it's the only thing that has to change for the reminder to stay accurate.
 - **`.github/workflows/weekly-reminder.yml`** — a GitHub Actions workflow that runs every Saturday at 3:00 PM IST, reads `tracker/progress.json`, and emails both people the current week number, days remaining until the build date, what each track should be on, and each person's last "left off" note. The subject line is prefixed `IMPORTANT:` so it doesn't get lost. If nobody has committed to `progress.json` in 7+ days, the email says so instead of a generic "keep going."
+- **`index.html`** — a one-line redirect at the repo root so the GitHub Pages root URL lands straight on the tracker.
 - **`README.md`** — this file.
 
 ## Opening the tracker
 
-Open `tracker/learning-pipeline-local.html` directly from disk (double-click it, or open it in your browser via its `file://` path). It has to be opened from that real file location for progress to persist — `localStorage` is tied to the page's origin, so opening it from a temp copy, a preview pane, or a different path each time will look like it's not saving.
+Two ways to use it, and they don't share state — each is its own browser's `localStorage`:
+
+- **Hosted (what to hand your friend):** open the live link above. Anyone can view it; nobody but you can push changes to the repo. Each person's checkbox state lives only in their own browser, exactly like the local copy — that's why Export/Import and the weekly email exist, to keep the two of you in sync.
+- **Local:** open `tracker/learning-pipeline-local.html` directly from disk (double-click it, or open it in your browser via its `file://` path). It has to be opened from that real file location for progress to persist — `localStorage` is tied to the page's origin, so opening it from a temp copy, a preview pane, or a different path each time will look like it's not saving.
 
 ## Weekly routine
 
