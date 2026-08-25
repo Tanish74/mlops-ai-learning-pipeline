@@ -183,6 +183,13 @@
   .pipe .stage-head .st.passed { color: var(--passed); }
   .pipe .stage-head .st.running { color: var(--running); }
   .pipe .stage-title { color: var(--ink); font-weight: 600; letter-spacing: .02em; }
+  .pipe .stage-head .stage-src {
+    color: var(--running); text-decoration: none;
+    border-bottom: 1px solid var(--link-underline);
+    font-weight: 500; white-space: nowrap;
+  }
+  .pipe .stage-head .stage-src:hover { border-bottom-color: var(--running); }
+  .pipe .stage-head .stage-src::after { content: ' ↗'; }
 
   .pipe ul.items { list-style: none; margin: 0; padding: 0; }
   .pipe li.item {
@@ -493,6 +500,11 @@
     head.appendChild(el('span', 'stage-title', st.title));
     const stTxt = stats.complete ? 'passed' : started ? 'running' : 'pending';
     head.appendChild(el('span', 'st ' + (stats.complete ? 'passed' : started ? 'running' : ''), stTxt));
+    if (st.url) {
+      const srcLink = el('a', 'stage-src', st.src || 'study material');
+      srcLink.href = st.url; srcLink.target = '_blank'; srcLink.rel = 'noopener';
+      head.appendChild(srcLink);
+    }
     const right = el('span', null, st.weeks + '  ·  ' + stats.done + '/' + stats.total);
     right.style.marginLeft = 'auto';
     head.appendChild(right);
