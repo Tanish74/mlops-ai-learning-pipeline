@@ -1,0 +1,789 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper:      #E8E6DE;
+    --paper-2:    #F1EFE9;
+    --ink:        #16180F;
+    --ink-soft:   #4A4C42;
+    --rule:       #C9C6BB;
+    --rule-soft:  rgba(201,198,187,.55);
+    --passed:     #2C5F4A;
+    --running:    #1F3A6E;
+    --link-underline: rgba(31,58,110,.3);
+    --pending:    #A3A198;
+    --deadline:   #C6402F;
+
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+    --sans: "IBM Plex Sans", system-ui, sans-serif;
+    --disp: "Space Grotesk", var(--sans);
+
+    color-scheme: light dark;
+  }
+
+  /* follows the OS setting until the button below sets an explicit choice */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:      #1B1C17;
+      --paper-2:    #232420;
+      --ink:        #EDEAE1;
+      --ink-soft:   #A6A395;
+      --rule:       #3A3B33;
+      --rule-soft:  rgba(58,59,51,.6);
+      --passed:     #5FB98C;
+      --running:    #6C93E0;
+      --link-underline: rgba(108,147,224,.35);
+      --pending:    #6B6A5E;
+      --deadline:   #E8604A;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:      #1B1C17;
+    --paper-2:    #232420;
+    --ink:        #EDEAE1;
+    --ink-soft:   #A6A395;
+    --rule:       #3A3B33;
+    --rule-soft:  rgba(58,59,51,.6);
+    --passed:     #5FB98C;
+    --running:    #6C93E0;
+    --link-underline: rgba(108,147,224,.35);
+    --pending:    #6B6A5E;
+    --deadline:   #E8604A;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"] { color-scheme: light; }
+
+  * { box-sizing: border-box; }
+
+  .pipe {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.55;
+    padding: 0 0 64px;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color .18s ease, color .18s ease;
+  }
+  .pipe .wrap { max-width: 940px; margin: 0 auto; padding: 0 24px; }
+
+  .pipe .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- masthead ---------- */
+  .pipe .head { padding: 44px 0 28px; border-bottom: 1.5px solid var(--ink); }
+  .pipe h1 {
+    font-family: var(--disp);
+    font-weight: 700;
+    font-size: clamp(34px, 6.2vw, 60px);
+    letter-spacing: -.035em;
+    line-height: .96;
+    margin: 14px 0 0;
+  }
+  .pipe h1 .thin { font-weight: 500; color: var(--ink-soft); display: block; }
+
+  .pipe .deadline-bar {
+    margin-top: 26px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .04em;
+  }
+  .pipe .days {
+    color: var(--deadline);
+    font-family: var(--disp);
+    font-weight: 700;
+    font-size: 30px;
+    letter-spacing: -.03em;
+    line-height: 1;
+  }
+  .pipe .deadline-bar input[type=date] {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed var(--ink-soft);
+    color: var(--ink);
+    padding: 2px 0;
+    cursor: pointer;
+  }
+
+  /* ---------- lanes ---------- */
+  .pipe .lane { border-bottom: 1px solid var(--rule); padding: 34px 0 30px; }
+  .pipe .lane-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 20px; }
+  .pipe .lane-name {
+    font-family: var(--disp);
+    font-weight: 700;
+    font-size: 25px;
+    letter-spacing: -.02em;
+    background: transparent;
+    border: none;
+    border-bottom: 1px dashed transparent;
+    color: var(--ink);
+    padding: 0;
+    max-width: 240px;
+  }
+  .pipe .lane-name:hover, .pipe .lane-name:focus { border-bottom-color: var(--ink-soft); outline: none; }
+  .pipe .lane-role {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding-bottom: 4px;
+  }
+  .pipe .lane-pct {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    padding-bottom: 4px;
+  }
+
+  /* rail */
+  .pipe .rail { display: flex; align-items: center; gap: 0; margin: 22px 0 4px; }
+  .pipe .node {
+    width: 13px; height: 13px; border-radius: 50%;
+    border: 1.5px solid var(--pending);
+    background: var(--paper);
+    flex: none;
+  }
+  .pipe .node.done { background: var(--passed); border-color: var(--passed); }
+  .pipe .node.active { border-color: var(--running); border-width: 3px; }
+  .pipe .seg { flex: 1; height: 1.5px; background: var(--pending); opacity: .5; }
+  .pipe .seg.done { background: var(--passed); opacity: 1; }
+
+  /* stage */
+  .pipe .stage { margin-top: 22px; }
+  .pipe .stage-head {
+    display: flex; align-items: baseline; gap: 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    padding-bottom: 7px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .pipe .stage-head .st { font-weight: 600; }
+  .pipe .stage-head .st.passed { color: var(--passed); }
+  .pipe .stage-head .st.running { color: var(--running); }
+  .pipe .stage-title { color: var(--ink); font-weight: 600; letter-spacing: .02em; }
+
+  .pipe ul.items { list-style: none; margin: 0; padding: 0; }
+  .pipe li.item {
+    display: flex; align-items: flex-start; gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--rule-soft);
+  }
+  .pipe li.item:last-child { border-bottom: none; }
+  .pipe .box {
+    flex: none; margin-top: 2px;
+    width: 17px; height: 17px;
+    border: 1.5px solid var(--ink-soft);
+    background: var(--paper-2);
+    cursor: pointer;
+    display: grid; place-items: center;
+    padding: 0;
+    border-radius: 2px;
+    transition: background .12s ease, border-color .12s ease;
+  }
+  .pipe .box:hover { border-color: var(--ink); }
+  .pipe .box:focus-visible { outline: 2px solid var(--running); outline-offset: 2px; }
+  .pipe .box.on { background: var(--passed); border-color: var(--passed); }
+  .pipe .box svg { width: 11px; height: 11px; opacity: 0; }
+  .pipe .box.on svg { opacity: 1; }
+
+  .pipe .item-body { flex: 1; min-width: 0; }
+  .pipe .item-label { font-size: 14.5px; }
+  .pipe li.item.on .item-label { color: var(--ink-soft); text-decoration: line-through; text-decoration-thickness: 1px; }
+  .pipe .item-meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-soft);
+    margin-top: 2px;
+    display: flex; flex-wrap: wrap; gap: 4px 12px;
+  }
+  .pipe .item-meta a { color: var(--running); text-decoration: none; border-bottom: 1px solid var(--link-underline); }
+  .pipe .item-meta a:hover { border-bottom-color: var(--running); }
+  .pipe .stamp { color: var(--passed); }
+
+  /* left-off note */
+  .pipe .leftoff { margin-top: 26px; background: var(--paper-2); border-left: 3px solid var(--running); padding: 14px 16px; }
+  .pipe .leftoff label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--ink-soft); margin-bottom: 7px;
+  }
+  .pipe .leftoff textarea {
+    width: 100%; border: none; background: transparent; resize: vertical;
+    font-family: var(--sans); font-size: 14.5px; color: var(--ink);
+    min-height: 44px; line-height: 1.5;
+  }
+  .pipe .leftoff textarea:focus { outline: none; }
+  .pipe .leftoff textarea::placeholder { color: var(--pending); }
+
+  /* ---------- merge ---------- */
+  .pipe .merge { padding: 36px 0 0; }
+  .pipe .converge { display: block; width: 100%; max-width: 340px; height: 54px; margin: 0 0 20px; }
+  .pipe .merge.locked .stage { opacity: .48; }
+  .pipe .gate {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: .04em;
+    color: var(--ink-soft); border: 1px dashed var(--pending);
+    padding: 9px 13px; display: inline-block; margin-bottom: 18px;
+  }
+  .pipe .gate.open { color: var(--passed); border-color: var(--passed); border-style: solid; }
+
+  /* ---------- footer ---------- */
+  .pipe .foot {
+    margin-top: 44px; padding-top: 20px; border-top: 1.5px solid var(--ink);
+    display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+    font-family: var(--mono); font-size: 11.5px; color: var(--ink-soft);
+  }
+  .pipe button.act {
+    font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    background: var(--ink); color: var(--paper); border: none;
+    padding: 9px 15px; cursor: pointer;
+  }
+  .pipe button.act:hover { background: var(--running); }
+  .pipe button.act.ghost { background: transparent; color: var(--ink-soft); border: 1px solid var(--rule); }
+  .pipe button.act.ghost:hover { color: var(--ink); border-color: var(--ink); background: transparent; }
+  .pipe button.act:focus-visible { outline: 2px solid var(--running); outline-offset: 2px; }
+
+  .pipe .status { font-family: var(--mono); font-size: 11px; color: var(--pending); }
+  .pipe .status.err { color: var(--deadline); }
+
+  .pipe .digest {
+    display: none; margin-top: 16px; width: 100%;
+    font-family: var(--mono); font-size: 12px; line-height: 1.6;
+    background: var(--paper-2); border: 1px solid var(--rule);
+    padding: 14px; white-space: pre-wrap; color: var(--ink);
+  }
+  .pipe .digest.show { display: block; }
+
+  @media (max-width: 620px) {
+    .pipe .wrap { padding: 0 16px; }
+    .pipe .lane-pct { margin-left: 0; width: 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pipe * { transition: none !important; }
+  }
+</style>
+
+<div class="pipe">
+  <div class="wrap">
+
+    <header class="head">
+      <div class="eyebrow">Two lanes &middot; one merge &middot; shared board</div>
+      <h1>Learning<br>pipeline<span class="thin">mlops &times; ai engineering</span></h1>
+      <div class="deadline-bar">
+        <span class="days" id="days">&mdash;</span>
+        <span>days until the build starts &mdash; target</span>
+        <input type="date" id="buildDate" aria-label="Build start date">
+        <span id="weekNow"></span>
+      </div>
+    </header>
+
+    <div id="lanes"></div>
+
+    <section class="merge locked" id="mergeSec">
+      <div class="eyebrow">Stage 04</div>
+      <svg class="converge" viewBox="0 0 340 54" aria-hidden="true">
+        <path id="cvA" d="M0 8 H150 Q190 8 214 27 H340" fill="none" stroke="#A3A198" stroke-width="1.5"/>
+        <path id="cvB" d="M0 46 H150 Q190 46 214 27 H340" fill="none" stroke="#A3A198" stroke-width="1.5"/>
+        <circle cx="2" cy="8" r="4" fill="#A3A198" id="cvDotA"/>
+        <circle cx="2" cy="46" r="4" fill="#A3A198" id="cvDotB"/>
+        <circle cx="253" cy="27" r="6" fill="none" stroke="#A3A198" stroke-width="2" id="cvMerge"/>
+      </svg>
+      <div class="gate" id="gate">Locked &mdash; opens when both lanes clear stage 03</div>
+      <div id="mergeStage"></div>
+    </section>
+
+    <footer class="foot">
+      <button class="act" id="btnDigest">Weekly digest</button>
+      <button class="act ghost" id="btnCopy">Copy for email</button>
+      <button class="act ghost" id="btnExport">Export progress.json</button>
+      <button class="act ghost" id="btnImport">Import progress.json</button>
+      <input type="file" id="fileIn" accept=".json" hidden>
+      <button class="act ghost" id="btnTheme" aria-pressed="false">Dark mode</button>
+      <span class="status" id="status"></span>
+      <div class="digest" id="digest"></div>
+      <div style="width:100%;margin-top:14px;line-height:1.6">
+        Saved in this browser only. Export <code>progress.json</code> and commit it to the repo so the
+        weekly email stays accurate &mdash; and so the other person can import it.
+      </div>
+    </footer>
+
+  </div>
+</div>
+
+<script>
+(function () {
+  const KEY = 'learning-pipeline-v1';
+  const SHARED = true;
+  const THEME_KEY = 'learning-pipeline-theme-v1';
+
+  function effectiveTheme() {
+    const attr = document.documentElement.getAttribute('data-theme');
+    if (attr === 'light' || attr === 'dark') return attr;
+    return (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+  }
+
+  function updateThemeButton() {
+    const btn = document.getElementById('btnTheme');
+    if (!btn) return;
+    const dark = effectiveTheme() === 'dark';
+    btn.textContent = dark ? 'Light mode' : 'Dark mode';
+    btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+  }
+
+  function initTheme() {
+    const stored = localStorage.getItem(THEME_KEY);
+    if (stored === 'light' || stored === 'dark') {
+      document.documentElement.setAttribute('data-theme', stored);
+    }
+    updateThemeButton();
+    if (window.matchMedia) {
+      const mq = window.matchMedia('(prefers-color-scheme: dark)');
+      const onChange = () => { if (!localStorage.getItem(THEME_KEY)) updateThemeButton(); };
+      if (mq.addEventListener) mq.addEventListener('change', onChange);
+      else if (mq.addListener) mq.addListener(onChange);
+    }
+  }
+  initTheme();
+
+  const PLAN = {
+    lanes: [
+      {
+        id: 'a', name: 'Tanish', role: 'MLOps track',
+        stages: [
+          { id: 'a1', n: '01', title: 'Python for engineers', src: 'Corey Schafer', url: 'https://www.youtube.com/playlist?list=PL-osiE80TeTt2d9bfVyTiXJA-UTHn6WwU', weeks: 'Weeks 1–2', items: [
+            { id: 'a1a', t: 'Basics: syntax, lists, dicts, functions (vids 1–10)' },
+            { id: 'a1b', t: 'OOP series: classes, inheritance, dunder methods' },
+            { id: 'a1c', t: 'Virtual environments and pip' },
+            { id: 'a1d', t: 'The logging module' },
+            { id: 'a1e', t: 'unittest / pytest basics' },
+            { id: 'a1f', t: 'Rewrite one of your bash scripts in Python', note: 'no video — this is the real test' }
+          ]},
+          { id: 'a2', n: '02', title: 'ML fundamentals', src: 'CampusX 100 Days', url: 'https://www.youtube.com/playlist?list=PLKnIA16_Rmvbr7zKYQuBfsVkjoLcJgxHH', weeks: 'Weeks 3–4', items: [
+            { id: 'a2a', t: 'Days 1–10: what ML is, types, development lifecycle' },
+            { id: 'a2b', t: 'Days 11–20: EDA, scaling, encoding, missing data' },
+            { id: 'a2c', t: 'Days 21–30: regression, logistic regression, decision trees' },
+            { id: 'a2d', t: 'StatQuest lookups for anything that did not land', url: 'https://www.youtube.com/playlist?list=PLyiBQllIUtbPJyRWonEGBxNYqUkUKuVGM' }
+          ]},
+          { id: 'a3', n: '03', title: 'MLOps proper', src: 'MLOps Zoomcamp', url: 'https://www.youtube.com/playlist?list=PL3MmuxUbc_hIUISrluw_A7wDSmfOhErJK', weeks: 'Weeks 5–6', items: [
+            { id: 'a3a', t: 'Module 1 — intro and environment' },
+            { id: 'a3b', t: 'Module 2 — experiment tracking with MLflow' },
+            { id: 'a3c', t: 'Module 3 — orchestration' },
+            { id: 'a3d', t: 'Homework for modules 1–3', note: 'watching without the homework does not count' },
+            { id: 'a3e', t: 'Scaffold the repo, CI, and MLflow server for the project' }
+          ]}
+        ]
+      },
+      {
+        id: 'b', name: 'Friend', role: 'AI engineering track',
+        stages: [
+          { id: 'b1', n: '01', title: 'Python from scratch', src: 'Corey Schafer', url: 'https://www.youtube.com/playlist?list=PL-osiE80TeTt2d9bfVyTiXJA-UTHn6WwU', weeks: 'Weeks 1–3', items: [
+            { id: 'b1a', t: 'Full beginner half of the playlist, no skipping' },
+            { id: 'b1b', t: 'OOP series' },
+            { id: 'b1c', t: 'Virtual environments, pip, file handling' },
+            { id: 'b1d', t: 'Build one script that calls an LLM API', note: 'do this in week 2, before you feel ready' }
+          ]},
+          { id: 'b2', n: '02', title: 'ML fundamentals', src: 'CampusX 100 Days', url: 'https://www.youtube.com/playlist?list=PLKnIA16_Rmvbr7zKYQuBfsVkjoLcJgxHH', weeks: 'Weeks 3–5', items: [
+            { id: 'b2a', t: 'Days 1–20: lifecycle, data handling, EDA' },
+            { id: 'b2b', t: 'Days 21–40: regression, classification, trees' },
+            { id: 'b2c', t: 'Days 41–60: ensembles, feature engineering, evaluation' }
+          ]},
+          { id: 'b3', n: '03', title: 'Deep learning + LLM stack', src: 'Karpathy · LLMOps RAG', url: 'https://karpathy.ai/zero-to-hero.html', weeks: 'Weeks 5–8', items: [
+            { id: 'b3a', t: 'Zero to Hero L1 — micrograd and backprop', note: 'a full weekend is normal' },
+            { id: 'b3b', t: 'Zero to Hero L2 — makemore, language modelling' },
+            { id: 'b3c', t: 'LLMOps end-to-end RAG series', url: 'https://www.youtube.com/watch?v=JOI32IoReLs' },
+            { id: 'b3d', t: 'Build a RAG script over a folder of PDFs' }
+          ]}
+        ]
+      }
+    ],
+    merge: { id: 'm', n: '04', title: 'Ticket triage system', src: 'Both lanes', weeks: 'Week 7 onward', items: [
+      { id: 'm1', t: 'Phase 1 — notebook to package, DVC dataset, MLflow logging, FastAPI endpoint' },
+      { id: 'm2', t: 'Phase 2 — CI that retrains, registers, builds and pushes an image' },
+      { id: 'm3', t: 'Phase 3 — RAG service as a separate deployment with its own scaling profile' },
+      { id: 'm4', t: 'Phase 4 — drift monitoring, Grafana dashboard, canary rollout, auto-rollback' },
+      { id: 'm5', t: 'Phase 5 — deploy to EKS or GKE with a cost cap' }
+    ]}
+  };
+
+  let state = { done: {}, notes: {}, names: {}, buildDate: null };
+
+  const $ = s => document.querySelector(s);
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+
+  function defaultBuildDate() {
+    const d = new Date(); d.setDate(d.getDate() + 42);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function setStatus(msg, isErr) {
+    const s = $('#status');
+    s.textContent = msg;
+    s.className = 'status' + (isErr ? ' err' : '');
+    if (!isErr) setTimeout(() => { if (s.textContent === msg) s.textContent = ''; }, 2200);
+  }
+
+  async function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) state = Object.assign(state, JSON.parse(raw));
+    } catch (e) {
+      // no saved board yet — first run
+    }
+    if (!state.buildDate) state.buildDate = defaultBuildDate();
+    if (!state.done) state.done = {};
+    if (!state.notes) state.notes = {};
+    if (!state.names) state.names = {};
+  }
+
+  let saveTimer = null;
+  function save(quiet) {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      try {
+        localStorage.setItem(KEY, JSON.stringify(state));
+        if (!quiet) setStatus('Saved to this browser');
+      } catch (e) {
+        setStatus('Could not save — browser storage is blocked', true);
+      }
+    }, 250);
+  }
+
+  const stageStats = st => {
+    const total = st.items.length;
+    const done = st.items.filter(i => state.done[i.id]).length;
+    return { total, done, complete: done === total && total > 0 };
+  };
+
+  function laneStats(lane) {
+    let t = 0, d = 0;
+    lane.stages.forEach(s => { const x = stageStats(s); t += x.total; d += x.done; });
+    return { t, d, pct: t ? Math.round(d / t * 100) : 0 };
+  }
+
+  function buildStage(st, laneId) {
+    const wrap = el('div', 'stage');
+    const stats = stageStats(st);
+    const started = stats.done > 0;
+
+    const head = el('div', 'stage-head');
+    head.appendChild(el('span', null, st.n));
+    head.appendChild(el('span', 'stage-title', st.title));
+    const stTxt = stats.complete ? 'passed' : started ? 'running' : 'pending';
+    head.appendChild(el('span', 'st ' + (stats.complete ? 'passed' : started ? 'running' : ''), stTxt));
+    const right = el('span', null, st.weeks + '  ·  ' + stats.done + '/' + stats.total);
+    right.style.marginLeft = 'auto';
+    head.appendChild(right);
+    wrap.appendChild(head);
+
+    const ul = el('ul', 'items');
+    st.items.forEach(it => {
+      const li = el('li', 'item' + (state.done[it.id] ? ' on' : ''));
+
+      const box = el('button', 'box' + (state.done[it.id] ? ' on' : ''));
+      box.setAttribute('aria-pressed', state.done[it.id] ? 'true' : 'false');
+      box.setAttribute('aria-label', 'Mark done: ' + it.t);
+      box.innerHTML = '<svg viewBox="0 0 12 12"><path d="M1.5 6.2 4.4 9 10.5 2.6" fill="none" stroke="#E8E6DE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      box.addEventListener('click', () => {
+        if (state.done[it.id]) delete state.done[it.id];
+        else state.done[it.id] = new Date().toISOString().slice(0, 10);
+        save(); render();
+      });
+      li.appendChild(box);
+
+      const body = el('div', 'item-body');
+      body.appendChild(el('div', 'item-label', it.t));
+      const meta = el('div', 'item-meta');
+      if (state.done[it.id]) meta.appendChild(el('span', 'stamp', 'done ' + state.done[it.id]));
+      if (it.note) meta.appendChild(el('span', null, it.note));
+      if (it.url) {
+        const a = el('a', null, 'watch');
+        a.href = it.url; a.target = '_blank'; a.rel = 'noopener';
+        meta.appendChild(a);
+      }
+      if (meta.childNodes.length) body.appendChild(meta);
+      li.appendChild(body);
+      ul.appendChild(li);
+    });
+    wrap.appendChild(ul);
+    return wrap;
+  }
+
+  function buildLane(lane) {
+    const sec = el('section', 'lane');
+    const stats = laneStats(lane);
+
+    const head = el('div', 'lane-head');
+    const nameIn = el('input', 'lane-name');
+    nameIn.value = state.names[lane.id] || lane.name;
+    nameIn.setAttribute('aria-label', 'Name for this lane');
+    nameIn.addEventListener('input', () => { state.names[lane.id] = nameIn.value; save(true); });
+    head.appendChild(nameIn);
+    head.appendChild(el('span', 'lane-role', lane.role));
+    head.appendChild(el('span', 'lane-pct', stats.d + ' of ' + stats.t + ' done · ' + stats.pct + '%'));
+    sec.appendChild(head);
+
+    // rail
+    const rail = el('div', 'rail');
+    lane.stages.forEach((st, i) => {
+      const x = stageStats(st);
+      const node = el('div', 'node' + (x.complete ? ' done' : x.done > 0 ? ' active' : ''));
+      node.title = st.title;
+      rail.appendChild(node);
+      if (i < lane.stages.length - 1) rail.appendChild(el('div', 'seg' + (x.complete ? ' done' : '')));
+    });
+    sec.appendChild(rail);
+
+    lane.stages.forEach(st => sec.appendChild(buildStage(st, lane.id)));
+
+    const lo = el('div', 'leftoff');
+    const lab = el('label', null, 'Where I left off');
+    lab.htmlFor = 'lo-' + lane.id;
+    lo.appendChild(lab);
+    const ta = el('textarea');
+    ta.id = 'lo-' + lane.id;
+    ta.placeholder = 'e.g. stopped 14 min into the decorators video, confused about @property';
+    ta.value = state.notes[lane.id] || '';
+    ta.addEventListener('input', () => { state.notes[lane.id] = ta.value; save(true); });
+    lo.appendChild(ta);
+    sec.appendChild(lo);
+
+    return sec;
+  }
+
+  function laneCleared(lane) {
+    return lane.stages.every(s => stageStats(s).complete);
+  }
+
+  function render() {
+    const lanesEl = $('#lanes');
+    lanesEl.innerHTML = '';
+    PLAN.lanes.forEach(l => lanesEl.appendChild(buildLane(l)));
+
+    // merge
+    const ms = $('#mergeStage');
+    ms.innerHTML = '';
+    ms.appendChild(buildStage(PLAN.merge, 'm'));
+
+    const aOK = laneCleared(PLAN.lanes[0]);
+    const bOK = laneCleared(PLAN.lanes[1]);
+    const open = aOK && bOK;
+    $('#mergeSec').classList.toggle('locked', !open);
+    const gate = $('#gate');
+    gate.classList.toggle('open', open);
+    gate.textContent = open
+      ? 'Open — both lanes cleared. Start building.'
+      : 'Locked — opens when both lanes clear stage 03  (' +
+        (state.names.a || 'Tanish') + ': ' + (aOK ? 'ready' : 'not yet') + ', ' +
+        (state.names.b || 'Friend') + ': ' + (bOK ? 'ready' : 'not yet') + ')';
+
+    const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const col = c => { $('#cvA').setAttribute('stroke', c[0]); $('#cvDotA').setAttribute('fill', c[0]);
+                       $('#cvB').setAttribute('stroke', c[1]); $('#cvDotB').setAttribute('fill', c[1]);
+                       $('#cvMerge').setAttribute('stroke', c[2]); };
+    const passedC = cssVar('--passed'), pendingC = cssVar('--pending');
+    col([aOK ? passedC : pendingC, bOK ? passedC : pendingC, open ? passedC : pendingC]);
+
+    // deadline
+    const bd = $('#buildDate');
+    bd.value = state.buildDate;
+    const diff = Math.ceil((new Date(state.buildDate) - new Date().setHours(0, 0, 0, 0)) / 86400000);
+    $('#days').textContent = diff >= 0 ? diff : Math.abs(diff);
+    $('#days').nextElementSibling.textContent = diff >= 0
+      ? 'days until the build starts — target'
+      : 'days past the build date — target was';
+    const wk = Math.max(1, 7 - Math.ceil(diff / 7));
+    $('#weekNow').textContent = '· week ' + wk;
+  }
+
+  function digestText() {
+    const lines = [];
+    const bd = new Date(state.buildDate);
+    const diff = Math.ceil((bd - new Date().setHours(0, 0, 0, 0)) / 86400000);
+    lines.push('LEARNING PIPELINE — WEEKLY DIGEST');
+    lines.push(new Date().toDateString());
+    lines.push(diff >= 0 ? diff + ' days until the build starts' : 'Build date passed ' + Math.abs(diff) + ' days ago');
+    lines.push('');
+    PLAN.lanes.forEach(lane => {
+      const nm = state.names[lane.id] || lane.name;
+      const s = laneStats(lane);
+      lines.push('── ' + nm.toUpperCase() + ' (' + lane.role + ') — ' + s.pct + '%');
+      lane.stages.forEach(st => {
+        const x = stageStats(st);
+        lines.push('   ' + st.n + ' ' + st.title + '  ' + x.done + '/' + x.total +
+                   (x.complete ? '  PASSED' : x.done ? '  running' : '  pending'));
+      });
+      const nextItem = lane.stages.flatMap(st => st.items).find(i => !state.done[i.id]);
+      lines.push('   Next: ' + (nextItem ? nextItem.t : 'lane complete'));
+      if (state.notes[lane.id]) lines.push('   Left off: ' + state.notes[lane.id]);
+      lines.push('');
+    });
+    const mx = stageStats(PLAN.merge);
+    lines.push('── PROJECT  ' + mx.done + '/' + mx.total);
+    return lines.join('\n');
+  }
+
+  $('#buildDate').addEventListener('change', e => { state.buildDate = e.target.value; save(); render(); });
+
+  $('#btnTheme').addEventListener('click', () => {
+    const next = effectiveTheme() === 'dark' ? 'light' : 'dark';
+    localStorage.setItem(THEME_KEY, next);
+    document.documentElement.setAttribute('data-theme', next);
+    updateThemeButton();
+    render();
+  });
+
+  $('#btnDigest').addEventListener('click', () => {
+    const d = $('#digest');
+    d.textContent = digestText();
+    d.classList.toggle('show');
+  });
+
+  $('#btnCopy').addEventListener('click', async () => {
+    const txt = digestText();
+    try {
+      await navigator.clipboard.writeText(txt);
+      setStatus('Copied to clipboard');
+    } catch (e) {
+      const d = $('#digest');
+      d.textContent = txt; d.classList.add('show');
+      setStatus('Clipboard blocked — select the text below', true);
+    }
+  });
+
+  function startDate() {
+    const b = new Date(state.buildDate);
+    b.setDate(b.getDate() - 42);
+    return b.toISOString().slice(0, 10);
+  }
+
+  function exportPayload() {
+    return {
+      start_date: startDate(),
+      build_date: state.buildDate,
+      board_url: 'file:///' + (state.boardPath || 'Documents/MLOPS+AI Project/tracker/learning-pipeline-local.html'),
+      people: PLAN.lanes.map(lane => {
+        const next = lane.stages.flatMap(s => s.items).find(i => !state.done[i.id]);
+        return {
+          name: state.names[lane.id] || lane.name,
+          track: lane.role,
+          this_week: next ? next.t : 'lane complete — start the project',
+          left_off: state.notes[lane.id] || ''
+        };
+      }),
+      _board: { done: state.done, notes: state.notes, names: state.names, buildDate: state.buildDate }
+    };
+  }
+
+  $('#btnExport').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(exportPayload(), null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'progress.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setStatus('Exported — commit it to the repo');
+  });
+
+  $('#btnImport').addEventListener('click', () => $('#fileIn').click());
+
+  $('#fileIn').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const fr = new FileReader();
+    fr.onload = () => {
+      try {
+        const d = JSON.parse(fr.result);
+        const b = d._board;
+        if (!b) { setStatus('That file has no board data in it', true); return; }
+        state.done = Object.assign(state.done || {}, b.done || {});
+        state.notes = Object.assign(state.notes || {}, b.notes || {});
+        state.names = Object.assign(state.names || {}, b.names || {});
+        if (b.buildDate) state.buildDate = b.buildDate;
+        save(); render();
+        setStatus('Merged in');
+      } catch (err) {
+        setStatus('Could not read that file — is it valid JSON?', true);
+      }
+    };
+    fr.readAsText(f);
+    e.target.value = '';
+  });
+
+  function nextFor(lane) {
+    const it = lane.stages.flatMap(s => s.items).find(i => !state.done[i.id]);
+    return it ? it.t : 'lane complete';
+  }
+
+  $('#btnExport').addEventListener('click', () => {
+    const out = {
+      start_date: state.startDate || new Date().toISOString().slice(0, 10),
+      build_date: state.buildDate,
+      board_url: 'file:///local',
+      done: state.done,
+      notes: state.notes,
+      names: state.names,
+      people: PLAN.lanes.map(l => ({
+        name: state.names[l.id] || l.name,
+        track: l.role,
+        this_week: nextFor(l),
+        left_off: state.notes[l.id] || ''
+      }))
+    };
+    const blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'progress.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setStatus('Exported — commit it to the repo');
+  });
+
+  $('#btnImport').addEventListener('click', () => $('#fileIn').click());
+
+  $('#fileIn').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const d = JSON.parse(r.result);
+        if (d.done) state.done = Object.assign({}, state.done, d.done);
+        if (d.notes) state.notes = Object.assign({}, state.notes, d.notes);
+        if (d.names) state.names = Object.assign({}, state.names, d.names);
+        if (d.build_date) state.buildDate = d.build_date;
+        save(); render();
+        setStatus('Imported and merged');
+      } catch (err) {
+        setStatus('That file is not a valid progress.json', true);
+      }
+      e.target.value = '';
+    };
+    r.readAsText(f);
+  });
+
+  load().then(render).catch(() => { state.buildDate = defaultBuildDate(); render(); });
+})();
+</script>

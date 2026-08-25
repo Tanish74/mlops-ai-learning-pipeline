@@ -1,0 +1,20 @@
+{
+  "start_date": "2026-08-25",
+  "build_date": "2026-10-06",
+  "board_url": "https://replace-with-your-tracker-link",
+
+  "people": [
+    {
+      "name": "Tanish",
+      "track": "MLOps",
+      "this_week": "Corey Schafer — OOP series, then virtualenvs",
+      "left_off": ""
+    },
+    {
+      "name": "Friend",
+      "track": "AI engineering",
+      "this_week": "Corey Schafer — basics, videos 1 to 10",
+      "left_off": ""
+    }
+  ]
+}
